@@ -3,6 +3,9 @@ process sieve_mono{
   if(params.blacklist && params.container_engine == 'docker'){
     containerOptions "-v \$(dirname ${params.blacklist}):\$(dirname ${params.blacklist})"
   }
+  if(params.blacklist && params.container_engine == 'singularity'){
+    containerOptions "-B \$(dirname ${params.blacklist}):\$(dirname ${params.blacklist})"
+  }
 
   label 'big'
   publishDir "${params.outDir}/QC/05_ALIGNMENT_FILTERING/monoNuc", mode: 'copy', pattern: "*_mono_FiltLog.txt"
@@ -32,6 +35,9 @@ process sieve_sub{
   container 'uschwartz/deeptools_samtools:v1.0'
   if(params.blacklist && params.container_engine == 'docker'){
    containerOptions "-v \$(dirname ${params.blacklist}):\$(dirname ${params.blacklist})"
+  }
+  if(params.blacklist && params.container_engine == 'singularity'){
+    containerOptions "-B \$(dirname ${params.blacklist}):\$(dirname ${params.blacklist})"
   }
 
   label 'big'

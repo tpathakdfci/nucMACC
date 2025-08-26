@@ -3,6 +3,9 @@ process featureCounts_mono{
          if (params.container_engine == 'docker') {
                 containerOptions "-v \$(dirname ${params.genome}):\$(dirname ${params.genome})"
          }
+        if (params.container_engine == 'singularity') {
+                containerOptions "-B \$(dirname ${params.genome}):\$(dirname ${params.genome})"
+         }
         publishDir "${params.outDir}/RUN/04_NUCS_READ_COUNTS", mode: 'copy'
 
 
@@ -53,6 +56,9 @@ process featureCounts_sub{
         label 'big'
         if (params.container_engine == 'docker') {
                 containerOptions "-v \$(dirname ${params.genome}):\$(dirname ${params.genome})"
+        }
+        if (params.container_engine == 'singularity') {
+                containerOptions "-B \$(dirname ${params.genome}):\$(dirname ${params.genome})"
         }
         publishDir "${params.outDir}/RUN/04_NUCS_READ_COUNTS", mode: 'copy'
 

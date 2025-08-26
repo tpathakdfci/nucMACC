@@ -2,6 +2,9 @@ process TSS_profile_mono{
    if (params.container_engine == 'docker') {
     containerOptions "-v \$(dirname ${params.TSS}):\$(dirname ${params.TSS})"
    }
+  if (params.container_engine == 'singularity') {
+    containerOptions "-B \$(dirname ${params.TSS}):\$(dirname ${params.TSS})"
+  }
 
   label 'big'
 
@@ -45,6 +48,10 @@ process TSS_profile_sub{
   if (params.container_engine == 'docker') {
     containerOptions "-v \$(dirname ${params.TSS}):\$(dirname ${params.TSS})"
   }
+  if (params.container_engine == 'singularity') {
+    containerOptions "-B \$(dirname ${params.TSS}):\$(dirname ${params.TSS})"
+  }
+
   label 'big'
 
   input:
