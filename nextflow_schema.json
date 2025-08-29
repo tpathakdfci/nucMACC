@@ -1,0 +1,90 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://raw.githubusercontent.com/uschwartz/nucMACC//nextflow_schema.json",
+    "title": "uschwartz/nucMACC pipeline parameters",
+    "description": "Nextflow differential MNase-seq analysis pipeline",
+    "type": "object",
+    "properties": {
+        "analysis": {
+            "type": "string",
+            "default": "nucMACC",
+            "enum": [
+                "nucMACC",
+                "MNaseQC"
+            ]
+        },
+        "csvInput": {
+            "type": "string",
+            "format": "file-path",
+            "mimetype": "text/csv",
+            "pattern": "^\\S+\\.csv$",
+            "description": "Path to comma-separated file containing information about the samples in the experiment.",
+            "help_text": "You will need to create a samplesheet with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 5 columns, and a header row. See [usage docs](https://nf-co.re/atacseq/docs/usage#introduction).",
+            "fa_icon": "fas fa-file-csv"
+        },
+        "outDir": {
+            "type": "string",
+            "format": "directory-path",
+            "description": "The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.",
+            "fa_icon": "fas fa-folder-open"
+        },
+        "genomeIdx": {
+            "type": "string",
+            "format": "directory-path",
+            "description": "Path to bowtie2 index folder.",
+            "help_text": "This directory should contain all the pre-built index files for the fasta.",
+            "fa_icon": "fas fa-folder-open"
+        },
+        "genome": {
+            "type": "string",
+            "format": "file-path",
+            "exists": true,
+            "mimetype": "text/plain",
+            "pattern": "^\\S+\\.fn?a(sta)?(\\.gz)?$",
+            "description": "Path to FASTA genome file.",
+            "fa_icon": "far fa-file-code"
+        },
+        "TSS": {
+            "type": "boolean"
+        },
+        "blacklist": {
+            "type": "boolean"
+        },
+        "genomeSize": {
+            "type": "integer",
+            "default": 5000000
+        },
+        "correlationMethod": {
+            "type": "string",
+            "default": "spearman"
+        },
+        "publishBam": {
+            "type": "boolean"
+        },
+        "publishBamFlt": {
+            "type": "boolean"
+        },
+        "bamEntry": {
+            "type": "boolean"
+        },
+        "low_memory": {
+            "type": "string",
+            "default": "14 GB"
+        },
+        "high_memory": {
+            "type": "string",
+            "default": "45 GB"
+        },
+        "container_engine": {
+            "type": "string",
+            "default": "docker"
+        }
+    },
+    "required": [
+        "csvInput",
+        "analysis",
+        "outDir",
+        "genomeIdx",
+        "genome"
+    ]
+}
