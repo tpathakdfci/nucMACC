@@ -28,8 +28,8 @@ nextflow.enable.dsl = 2
 
 // Check mandatory parameters
 
-if (params.genome && params.genomes[params.genome]) {
-    def genome_config = params.genomes[params.genome]
+if (params.genome_type && params.genomes[params.genome_type]) {
+    def genome_config = params.genomes[params.genome_type]
     params.genome = file(genome_config.genome, checkIfExists: false)
     params.genomeIdx = file(genome_config.genomeIdx, checkIfExists: false)
 } else {
