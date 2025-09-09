@@ -1,9 +1,10 @@
 process plot_PCA{
-  publishDir "${params.outDir}/QC/08_PCA", mode: 'copy'
+  publishDir "${params.outDir}/QC/08_PCA/${sampleID}", mode: 'copy'
 
   input:
   file(bigwigSummary)
   val(name)
+  val(sampleID)
 
   output:
   file "${name}_PCA.pdf"

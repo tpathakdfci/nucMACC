@@ -5,7 +5,8 @@ library(ggplot2)
 library(reshape2)
 
 # Reading the output-files from GenerateTxtFragCounts.R 
-txt_output <- list.files(path = ".", pattern = "fragment_statistic.txt", full.names = T)
+txt_output <- commandArgs(trailingOnly = TRUE)
+
 
 # Generate a matrix that contains all the information to be plotted. 
 # Here the absolute counts are needed to calculate the steps lost in each step of the pipeline.
@@ -37,11 +38,13 @@ relative <- matrix(data = NA, nrow = nrow(lost_matrix), ncol = ncol(lost_matrix)
 for (i in 1:ncol(lost_matrix)){
   relative[,i] <- sapply(lost_matrix[,i], function(x){(x/lost_matrix[1,i])*100})
 }
+
 rownames(relative) <- rownames(lost_matrix)
 colnames(relative) <- colnames(lost_matrix)
-rel_frame <- melt(relative[-1,], varnames = c("Type", "Sample"), value.name = "Counts")
-rel_frame$Type <- factor(rel_frame$Type, levels = c("Not aligned", "Quality-filtered",  
-                                                    "Size- and Blacklist-filtered", "MonoNuc",  "SubNuc"))
+relative_df <- as.data.frame(relative)
+relative_df$Type <- rownames(relative_df)
+rel_frame <- rel_frame <- melt(relative_df[-1,], id.vars = "Type", variable.name = "Sample", value.name = "Counts")
+rel_frame$Type <- factor(rel_frame$Type, levels = c("Not aligned", "Quality-filtered", "Size- and Blacklist-filtered", "SubNuc", "MonoNuc"))
 rel_frame$Counts <- as.numeric(rel_frame$Counts)
 r <- ggplot(rel_frame, aes(x = Sample, y = Counts, fill = Type)) + 
   geom_bar(stat = "identity") +
@@ -52,10 +55,11 @@ r <- ggplot(rel_frame, aes(x = Sample, y = Counts, fill = Type)) +
   theme_classic() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1), axis.title.y = element_text(color = "grey30", size = 10))
 
-### Plot the absolute amounts of reads. 
-plot_frame <- melt(lost_matrix[-1,], varnames = c("Type", "Sample"), value.name = "Counts")
-plot_frame$Type <- factor(plot_frame$Type, levels = c("Not aligned", "Quality-filtered",  
-                                                      "Size- and Blacklist-filtered", "MonoNuc",  "SubNuc"))
+### Plot the absolute amounts of reads.
+lost_df <- as.data.frame(lost_matrix)
+lost_df$Type <- rownames(lost_df)
+plot_frame <- melt(lost_df[-1,], id.vars = "Type", variable.name = "Sample", value.name = "Counts")
+plot_frame$Type <- factor(plot_frame$Type, levels = c("Not aligned", "Quality-filtered", "Size- and Blacklist-filtered", "SubNuc", "MonoNuc"))
 plot_frame$Counts <- as.numeric(plot_frame$Counts)
 g <- ggplot(plot_frame, aes(x = Sample, y = Counts/10**6, fill = Type)) + 
   geom_bar(stat = "identity") +

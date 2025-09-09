@@ -1,5 +1,5 @@
 process plot_correlation_Heatmap{
-  publishDir "${params.outDir}/QC/07_correlationHeatmap", mode: 'copy'
+  publishDir "${params.outDir}/QC/07_correlationHeatmap/${sampleID}", mode: 'copy'
 
   input:
   file(bigwigSummary)
@@ -14,6 +14,6 @@ process plot_correlation_Heatmap{
     --corMethod $params.correlationMethod --skipZeros \
     --plotTitle "${params.correlationMethod} correlation ${name}" \
     --whatToPlot heatmap --colorMap RdYlBu --plotNumbers \
-    --plotFile "${name}_correlationHeatmap_${params.correlationMethod}.pdf"   \
+    --plotFile ${name}_correlationHeatmap_${params.correlationMethod}.pdf   \
   """
 }

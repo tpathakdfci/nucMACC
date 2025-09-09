@@ -10,7 +10,7 @@ process mergeBam_mono{
 
   script:
   """
-  samtools merge "${Sample_Name}_mono.bam" $path_mono --threads $task.cpus -u
+  samtools merge ${Sample_Name}_mono.bam $path_mono --threads $task.cpus -u
   """
 }
 
@@ -26,6 +26,6 @@ process mergeBam_sub{
 
   script:
   """
-  samtools merge "${Sample_Name}_sub.bam" $path_sub --threads $task.cpus -u
+  samtools merge ${Sample_Name}_sub.bam $path_sub --threads $task.cpus -u
   """
 }

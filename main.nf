@@ -25,115 +25,81 @@ nextflow.enable.dsl = 2
      exit 0
  }
 
+ //                      workflow
 
-// Check mandatory parameters
+/// Read the CSV file once and create all required channels
+Channel
+    .fromPath(params.csvInput)
+    .splitCsv(header: true)
+    .set { samples_ch }
 
-if (params.genome_type && params.genomes[params.genome_type]) {
-    def genome_config = params.genomes[params.genome_type]
-    params.genome = file(genome_config.genome, checkIfExists: false)
-    params.genomeIdx = file(genome_config.genomeIdx, checkIfExists: false)
-} else {
-    exit 1, 'Error: You must provide a valid --genome key (e.g., GRCh38) that is configured in igenomes.config.'
-}
-
-
-if (params.csvInput) {
-    ch_csv = file(params.csvInput)
-} else {
-    exit 1, 'Input samplesheet not found!'
-}
-
-if (params.TSS) {
-    def ch_TSS = file(params.TSS)
-    if (ch_TSS.isEmpty()) {
-        exit 1, 'TSS file not found!'
-    }
-}
-
-if (params.blacklist) {
-    def ch_blacklist = file(params.blacklist)
-    if (ch_blacklist.isEmpty()) {
-        exit 1, 'Blacklist file not found!'
-    }
-}
-
-if (params.analysis == 'MNaseQC' || params.analysis == 'nucMACC') {
-    if (params.bamEntry == false) {
-        if (!params.genome) {
-            exit 1, 'Genome FASTA not found!'
-        }
-        if (!params.genomeIdx) {
-            exit 1, 'Bowtie2 index folder not found!'
-        }
-    }
-}
-
-// Read csv file
-if (params.test) {
-    if (params.bamEntry) {
-        Channel.fromPath(params.csvInput)
-            .splitCsv(header: true)
-            .map { row -> tuple(row.Sample_Name, file(row.path_mono)) }
-            .set { bamEntry_mono }
-        Channel.fromPath(params.csvInput)
-            .splitCsv(header: true)
-            .map { row -> tuple(row.Sample_Name, file(row.path_sub)) }
-            .set { bamEntry_sub }
-    } else {
-        Channel.fromPath(params.csvInput)
-            .splitCsv(header: true)
-            .map { row -> tuple(row.Sample_Name, file(params.project.concat(row.path_fwdReads))) }
-            .set { samples_fwd_ch }
-        Channel.fromPath(params.csvInput)
-            .splitCsv(header: true)
-            .map { row -> tuple(row.Sample_Name, file(params.project.concat(row.path_revReads))) }
-            .set { samples_rev_ch }
-    }
-} else if (params.bamEntry == true) {
-    Channel.fromPath(params.csvInput)
-        .splitCsv(header: true)
+// Create channels based on analysis type 
+if (params.bamEntry) {
+    samples_ch
         .map { row -> tuple(row.Sample_Name, file(row.path_mono)) }
         .set { bamEntry_mono }
-    Channel.fromPath(params.csvInput)
-        .splitCsv(header: true)
+
+    samples_ch
         .map { row -> tuple(row.Sample_Name, file(row.path_sub)) }
         .set { bamEntry_sub }
-    println "BamEntry csv part"
 } else {
-    Channel.fromPath(params.csvInput)
-        .splitCsv(header: true)
+    // creates the paired-end channel for alignment
+    samples_ch
+        .map { row -> tuple(row.Sample_Name, file(row.path_fwdReads), file(row.path_revReads)) }
+        .set { samplePair_ch }
+
+    samplePair_ch.view() { it -> "Item in samplePair_ch: ${it}" }
+
+    // creates the single-end channel for fastqc
+    samples_ch
         .map { row -> tuple(row.Sample_Name, file(row.path_fwdReads)) }
-        .set { samples_fwd_ch }
-    Channel.fromPath(params.csvInput)
-        .splitCsv(header: true)
-        .map { row -> tuple(row.Sample_Name, file(row.path_revReads)) }
-        .set { samples_rev_ch }
+        .mix(samples_ch.map { row -> tuple(row.Sample_Name, file(row.path_revReads)) })
+        .set { sampleSingle_ch }
 }
 
-if (params.bamEntry == false) {
-    samples_fwd_ch.mix(samples_rev_ch).set { sampleSingle_ch }
-    samples_fwd_ch.join(samples_rev_ch).set { samplePair_ch }
-}
-
-Channel.fromPath(params.csvInput)
-    .splitCsv(header: true)
+//  Create the MNase concentration channel 
+samples_ch
     .map { row -> tuple(row.MNase_U.toDouble(), row.Sample_Name) }
     .set { samples_conc }
 
+
+
+// load workflows
+// generate profiles
 include{MNaseQC} from './workflows/MNaseQC'
 include{sub_bamEntry; sub_FASTQ_entry; common_nucMACC} from './workflows/nucMACC'
 
-workflow {
-    if (params.analysis == 'MNaseQC') {
-        MNaseQC(sampleSingle_ch, samplePair_ch, samples_conc)
-    }
-    if (params.analysis == 'nucMACC') {
-        if (params.bamEntry == true) {
-            sub_bamEntry(bamEntry_mono, bamEntry_sub)
-            common_nucMACC(sub_bamEntry.out[0], sub_bamEntry.out[1], samples_conc)
-        } else {
-            sub_FASTQ_entry(sampleSingle_ch, samplePair_ch, samples_conc)
-            common_nucMACC(sub_FASTQ_entry.out[0], sub_FASTQ_entry.out[1], samples_conc)
+
+// Check mandatory parameters
+if (params.csvInput) { ch_csv = file(params.csvInput) } else { exit 1, 'Input samplesheet not found!' }
+
+if (params.TSS) {ch_TSS = file (params.TSS)}
+      if(params.TSS){
+        if (ch_TSS.isEmpty()) { exit 1, 'TSS file not found!'}
         }
-    }
+
+if (params.blacklist) {ch_blacklist = file (params.blacklist)}
+      if(params.blacklist){
+        if (ch_blacklist.isEmpty()) { exit 1, 'Blacklist file not found!'}
+        }
+
+
+  Channel.fromPath(params.genome).first().set { genome_ch }
+  Channel.fromPath(params.genomeIdx).set{genome_tarball_ch}
+
+
+workflow{
+        if(params.analysis=='MNaseQC'){
+                MNaseQC(sampleSingle_ch,samplePair_ch,samples_conc)
+        }
+        if(params.analysis=='nucMACC'){
+                if (params.bamEntry == true) {
+                  sub_bamEntry(bamEntry_mono,bamEntry_sub)
+                  common_nucMACC(sub_bamEntry.out[0], sub_bamEntry.out[1], samples_conc)
+                  }
+                else {
+                  sub_FASTQ_entry(sampleSingle_ch,samplePair_ch,samples_conc, genome_ch, genome_tarball_ch)
+                  common_nucMACC(sub_FASTQ_entry.out[0], sub_FASTQ_entry.out[1], samples_conc, genome_ch)
+                }
+        }
 }

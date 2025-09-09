@@ -51,10 +51,13 @@ workflow sub_bamEntry{
     sampleSingle_ch
     samplePair_ch
     samples_conc
+    genome_ch
+    genome_tarball_ch
+
 
     main:
     fastqc(sampleSingle_ch)
-    alignment(samplePair_ch)
+    alignment(samplePair_ch, genome_ch, genome_tarball_ch)
     qualimap(alignment.out[1])
 
     //monoNuc
@@ -83,6 +86,7 @@ workflow common_nucMACC{
   sieve_mono
   sieve_sub
   samples_conc
+  genome_ch
 
   main:
   //get lowest MNase digest
@@ -97,12 +101,12 @@ workflow common_nucMACC{
   pool(sieve_mono.map{name,bam -> file(bam)}.collect())
   danpos_mono(sieve_mono.mix(pool.out[0]), pool.out[1])
   convert2saf_mono(danpos_mono.out[1].join(pool.out[0]))
-  featureCounts_mono(convert2saf_mono.out[1], sieve_mono.map{name,bam -> file(bam)}.collect())
+  featureCounts_mono(convert2saf_mono.out[1], sieve_mono.map{name,bam -> file(bam)}.collect(), genome_ch)
 
   // subNucs
   danpos_sub(sieve_sub, pool.out[1])
   convert2saf_sub(danpos_sub.out[1].join(min_conc_sample).join(sieve_sub))
-  featureCounts_sub(convert2saf_sub.out[1], sieve_sub.map{name,bam -> file(bam)}.collect())
+  featureCounts_sub(convert2saf_sub.out[1], sieve_sub.map{name,bam -> file(bam)}.collect(), genome_ch)
 
   //TSS_Profile_mono
   if(params.TSS){

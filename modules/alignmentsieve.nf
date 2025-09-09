@@ -1,15 +1,9 @@
 process sieve_mono{
   container 'uschwartz/deeptools_samtools:v1.0'
-  if(params.blacklist && params.container_engine == 'docker'){
-    containerOptions "-v \$(dirname ${params.blacklist}):\$(dirname ${params.blacklist})"
-  }
-  if(params.blacklist && params.container_engine == 'singularity'){
-    containerOptions "-B \$(dirname ${params.blacklist}):\$(dirname ${params.blacklist})"
-  }
-
+  
   label 'big'
-  publishDir "${params.outDir}/QC/05_ALIGNMENT_FILTERING/monoNuc", mode: 'copy', pattern: "*_mono_FiltLog.txt"
-  publishDir "${params.outDir}/RUN/00_ALIGNMENT/monoNuc", mode: 'copy', pattern: "*_mono.bam", enabled:params.publishBamFlt
+  publishDir "${params.outDir}/QC/05_ALIGNMENT_FILTERING/monoNuc/${sampleID}", mode: 'copy', pattern: "*_mono_FiltLog.txt"
+  publishDir "${params.outDir}/RUN/00_ALIGNMENT/monoNuc/${sampleID}", mode: 'copy', pattern: "*_mono.bam", enabled:params.publishBamFlt
 
   input:
   tuple val(sampleID), file(bam), file(idx)
@@ -22,9 +16,9 @@ process sieve_mono{
   blacklistOpt = ( params.blacklist ? "--blackListFileName $params.blacklist":'')
   """
   alignmentSieve -b $bam \
-  -o ${sampleID}"_mono.bam" \
+  -o ${sampleID}_mono.bam \
   -p $task.cpus \
-  --filterMetrics  ${sampleID}"_mono_FiltLog.txt" \
+  --filterMetrics  ${sampleID}_mono_FiltLog.txt \
   --minFragmentLength 140 \
   --maxFragmentLength 200 \
   $blacklistOpt
@@ -33,12 +27,7 @@ process sieve_mono{
 
 process sieve_sub{
   container 'uschwartz/deeptools_samtools:v1.0'
-  if(params.blacklist && params.container_engine == 'docker'){
-   containerOptions "-v \$(dirname ${params.blacklist}):\$(dirname ${params.blacklist})"
-  }
-  if(params.blacklist && params.container_engine == 'singularity'){
-    containerOptions "-B \$(dirname ${params.blacklist}):\$(dirname ${params.blacklist})"
-  }
+  
 
   label 'big'
   publishDir "${params.outDir}/QC/05_ALIGNMENT_FILTERING/subNuc", mode: 'copy', pattern: "*_sub_FiltLog.txt"
@@ -55,9 +44,9 @@ process sieve_sub{
   blacklistOpt = ( params.blacklist ? "--blackListFileName $params.blacklist":'')
   """
   alignmentSieve -b $bam \
-  -o ${sampleID}"_sub.bam" \
+  -o ${sampleID}_sub.bam \
   -p $task.cpus \
-  --filterMetrics  ${sampleID}"_sub_FiltLog.txt" \
+  --filterMetrics  ${sampleID}_sub_FiltLog.txt \
   --maxFragmentLength 139 \
   $blacklistOpt
   """

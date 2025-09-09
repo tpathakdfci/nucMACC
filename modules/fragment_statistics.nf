@@ -12,22 +12,24 @@ process statistics_read{
   script:
   """
   GenerateTxtFragCounts.R
+
   """
 }
 
+
 process statistics_plot{
-  container 'uschwartz/r_nucmacc:v3.1'
-  publishDir "${params.outDir}/QC/06_FragmentStatistics", mode: 'copy'
+container 'uschwartz/r_nucmacc:v3.1'
+publishDir "${params.outDir}/QC/06_FragmentStatistics/", mode: 'copy'
 
-  input:
-  file(statistics_read)
+input:
+file(statistics_reads)
 
-  output:
-  file("*.txt")
+output:
+file("*.txt")
   file("*.pdf")
 
-  script:
-  """
-  Plot_comparison.R
-  """
+script:
+"""
+Plot_comparison.R ${statistics_reads.join(' ')}
+"""
 }

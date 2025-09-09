@@ -18,7 +18,7 @@ process fastqc{
 
 process multiqc{
 
-  publishDir "${params.outDir}/QC/multiqc/", mode: 'copy'
+  publishDir "${params.outDir}/QC/multiqc/${sampleID}", mode: 'copy'
 
   input:
   file('*')

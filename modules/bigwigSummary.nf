@@ -17,8 +17,8 @@ process bigwigSummary{
   multiBigwigSummary bins -b $bw \
   $regionOpt \
   --smartLabels \
-  --outFileName ${name}"_bw_summary.npz" \
-  --outRawCounts ${name}"_rawCounts.tab" \
+  --outFileName ${name}_bw_summary.npz \
+  --outRawCounts ${name}_rawCounts.tab \
   -p $task.cpus
   """
 }
